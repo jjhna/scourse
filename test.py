@@ -1,23 +1,20 @@
-from pyspark import SparkConf, SparkContext
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as func
+from pyspark.sql.types import StructType, StructField, IntegerType, FloatType
 
-conf = SparkConf().setMaster("local").setAppName("test")
-sc = SparkContext(conf = conf)
+spark = SparkSession.builder.appName("test").getOrCreate()
 
-def parseLine(line):
-    # split each line using comments
-    fields = line.split(',')
-    customerID = int(fields[0])
-    price = float(fields[2])
-    return (customerID, price)
+df = StructType([ \
+                     StructField("cust_id", IntegerType(), True), StructField("item_id", IntegerType(), True), StructField("price", FloatType(), True)])
 
-lines = sc.textFile("file:///scourse/customer-orders.csv")
-parsedLines = lines.map(parseLine)
-total = parsedLines.reduceByKey(lambda x, y: x + y)
+dfa = spark.read.schema(df).csv("file:///scourse/customer-orders.csv")
 
-flipped = total.map(lambda x: (x[1], x[0]))
-realtotal = flipped.sortByKey()
+something = dfa.groupBy("cust_id").agg(func.round(func.sum("price"), 2).alias("total_spent"))
 
-results = realtotal.collect()
+results = something.sort("total_spent")
 
-for result in results:
-    print(result)
+results.show(results.count())
+    
+spark.stop()
+
+                                                  
