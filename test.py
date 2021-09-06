@@ -18,12 +18,15 @@ connections = lines.withColumn("id", func.split(func.trim(func.col("value")), " 
     .groupBy("id").agg(func.sum("connections").alias("connections"))
 
 
-mostPopular = connections.sort(func.col("connections").asc()).first()
+minCount = connections.agg(func.min("connections")).first()[0]
 
+minConnect = connections.filter(func.col("connections") == minCount)
 
-mostPopularName = names.filter(func.col("id") == mostPopular[0]).select("name").first()
+#mostPopular.show(10, False)
 
-mostPopularName.show(10, False)
+minConnectNames = minConnect.join(names, "id")
 
-# print(mostPopularName[0] + " is the most popular superhero with " + str(mostPopular[1]) + " co-appearances.")
+minConnectNames.select("name", "connections").show()
+
+#print(mostPopularName[0] + " is the most popular superhero with " + str(mostPopular[1]) + " co-appearances.")
 

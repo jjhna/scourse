@@ -8,27 +8,33 @@ sc = SparkContext(conf = conf)
 startCharacterID = 5306 #SpiderMan
 targetCharacterID = 14  #ADAM 3,031 (who?)
 
-# Our accumulator, used to signal when we find the target character during
-# our BFS traversal.
+# Our accumulator, used to signal when we find the target character during our BFS traversal.
 hitCounter = sc.accumulator(0)
 
+# our function to convert our data to BFS
 def convertToBFS(line):
+    # first we split our data into multiple lines 
     fields = line.split()
+    # then we assign the first column or data in our row as the heroID
     heroID = int(fields[0])
+    # then we create an empty array called connections
     connections = []
+    # then we iterate through tall the connections, the 2nd data field[1] and append any similar connections
     for connection in fields[1:]:
         connections.append(int(connection))
 
+    # set the color to white and distance to max (since we don't know how far away it is atm)
     color = 'WHITE'
     distance = 9999
 
+    # we first color spiderman gray because that's where we are going to start first
     if (heroID == startCharacterID):
         color = 'GRAY'
         distance = 0
 
     return (heroID, (connections, distance, color))
 
-
+# then we call our text file and map it to our convertToBFS function
 def createStartingRdd():
     inputFile = sc.textFile("file:///scourse/marvel-graph.txt")
     return inputFile.map(convertToBFS)
